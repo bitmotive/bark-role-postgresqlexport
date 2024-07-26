@@ -31,11 +31,11 @@ The name of the database to export.
 
 The MySQL who will connect to the databse.
 
-**MYSQLEXPORT_DB_USER_PASSWORD**
+**MYSQLEXPORT_DB_USER_PASSWORD**:
 
 The password of the MySQL user.
 
-**MYSQLEXPORT_DESTINATION_FOLDER**
+**MYSQLEXPORT_DESTINATION_FOLDER**:
 
 Where to place the exported SQL file on the machine running Ansible.
 
