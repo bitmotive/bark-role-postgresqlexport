@@ -1,7 +1,7 @@
-BARK: MYSQLEXPORT
+BARK: POSTGRESQLEXPORT
 =========
 
-Automate a MySQL database backup
+Automate a PostgreSQL database backup
 
 Requirements
 ------------
@@ -23,19 +23,19 @@ The hostname or IP address of the PostgreSQL server.
 
 The port number on which the PostgreSQL server is listening (default: 5432).
 
-**MYSQLEXPORT_DB_NAME**:
+**POSTGRESQLEXPORT_DB_NAME**:
 
 The name of the database to export.
 
-**MYSQLEXPORT_DB_USER**:
+**POSTGRESQLEXPORT_DB_USER**:
 
-The MySQL who will connect to the databse.
+The PostgreSQL who will connect to the databse.
 
-**MYSQLEXPORT_DB_USER_PASSWORD**:
+**POSTGRESQLEXPORT_DB_USER_PASSWORD**:
 
-The password of the MySQL user.
+The password of the PostgreSQL user.
 
-**MYSQLEXPORT_DESTINATION_FOLDER**:
+**POSTGRESQLEXPORT_DESTINATION_FOLDER**:
 
 Where to place the exported SQL file on the machine running Ansible.
 
@@ -57,7 +57,6 @@ local_tmp = /tmp/ansible-local
 allow_world_readable_tmpfiles = True
 remote_tmp_dir_mode = 0777
 ```
-
 
 
 License
