@@ -1,0 +1,162 @@
+---
+# ROLE: POSTGRESQLEXPORT
+#
+# DESCRIPTION:
+# This role is used for automating the DB dump from a remote server 
+# to the localhost where Ansible is running. 
+
+
+###############################################################################
+################### VARIABLE INITIALIZATION & TASK SETUP ######################
+###############################################################################
+
+
+# POSTGRESQLEXPORT_DB_HOST
+# The hostname or IP address of the PostgreSQL server
+- name: POSTGRESQLEXPORT_DB_HOST set fact from env if possible
+  set_fact:
+    POSTGRESQLEXPORT_DB_HOST: "{{ lookup('env', 'POSTGRESQLEXPORT_DB_HOST') | default('') | trim }}"
+  when: lookup('env', 'POSTGRESQLEXPORT_DB_HOST') | default('', true) | trim != ''
+- name: POSTGRESQLEXPORT_DB_HOST prompt user input if unset
+  pause:
+    prompt: "SET POSTGRESQLEXPORT_DB_HOST"
+    echo: yes
+  register: input
+  when: POSTGRESQLEXPORT_DB_HOST is not defined
+- name: Set POSTGRESQLEXPORT_DB_HOST fact from user input
+  set_fact:
+    POSTGRESQLEXPORT_DB_HOST: "{{ input.user_input | default('') | trim }}"
+  when: POSTGRESQLEXPORT_DB_HOST is not defined
+
+# POSTGRESQLEXPORT_DB_PORT
+# The port number on which the PostgreSQL server is listening
+- name: POSTGRESQLEXPORT_DB_PORT set fact from env if possible
+  set_fact:
+    POSTGRESQLEXPORT_DB_PORT: "{{ lookup('env', 'POSTGRESQLEXPORT_DB_PORT') | default('5432') | trim }}"
+  when: lookup('env', 'POSTGRESQLEXPORT_DB_PORT') | default('', true) | trim != ''
+- name: POSTGRESQLEXPORT_DB_PORT prompt user input if unset
+  pause:
+    prompt: "SET POSTGRESQLEXPORT_DB_PORT (default: 5432)"
+    echo: yes
+  register: input
+  when: POSTGRESQLEXPORT_DB_PORT is not defined
+- name: Set POSTGRESQLEXPORT_DB_PORT fact from user input
+  set_fact:
+    POSTGRESQLEXPORT_DB_PORT: "{{ input.user_input | default('5432') | trim }}"
+  when: POSTGRESQLEXPORT_DB_PORT is not defined
+
+# POSTGRESQLEXPORT_DB_NAME
+# The name of the DB to be exported
+- name: POSTGRESQLEXPORT_DB_NAME set fact from env if possible
+  set_fact:
+    POSTGRESQLEXPORT_DB_NAME: "{{ lookup('env', 'POSTGRESQLEXPORT_DB_NAME') | default('') | trim }}"
+  when: lookup('env', 'POSTGRESQLEXPORT_DB_NAME') | default('', true) | trim != ''
+- name: POSTGRESQLEXPORT_DB_NAME prompt user input if unset
+  pause:
+    prompt: "SET POSTGRESQLEXPORT_DB_NAME"
+    echo: yes
+  register: input
+  when: POSTGRESQLEXPORT_DB_NAME is not defined
+- name: Set POSTGRESQLEXPORT_DB_NAME fact from user input
+  set_fact:
+    POSTGRESQLEXPORT_DB_NAME: "{{ input.user_input | default('') | trim }}"
+  when: POSTGRESQLEXPORT_DB_NAME is not defined
+
+# POSTGRESQLEXPORT_DB_USER
+# The username of the role with access to the DB to export
+- name: POSTGRESQLEXPORT_DB_USER set fact from env if possible
+  set_fact:
+    POSTGRESQLEXPORT_DB_USER: "{{ lookup('env', 'POSTGRESQLEXPORT_DB_USER') | default('') | trim }}"
+  when: lookup('env', 'POSTGRESQLEXPORT_DB_USER') | default('', true) | trim != ''
+- name: POSTGRESQLEXPORT_DB_USER prompt user input if unset
+  pause:
+    prompt: "SET POSTGRESQLEXPORT_DB_USER"
+    echo: yes
+  register: input
+  when: POSTGRESQLEXPORT_DB_USER is not defined
+- name: Set POSTGRESQLEXPORT_DB_USER fact from user input
+  set_fact:
+    POSTGRESQLEXPORT_DB_USER: "{{ input.user_input | default('') | trim }}"
+  when: POSTGRESQLEXPORT_DB_USER is not defined
+
+# POSTGRESQLEXPORT_DB_USER_PASSWORD
+# The password for the user with permissions to export the DB
+- name: POSTGRESQLEXPORT_DB_USER_PASSWORD set fact from env if possible
+  set_fact:
+    POSTGRESQLEXPORT_DB_USER_PASSWORD: "{{ lookup('env', 'POSTGRESQLEXPORT_DB_USER_PASSWORD') | default('') | trim }}"
+  when: lookup('env', 'POSTGRESQLEXPORT_DB_USER_PASSWORD') | default('', true) | trim != ''
+- name: POSTGRESQLEXPORT_DB_USER_PASSWORD prompt user input if unset
+  pause:
+    prompt: "SET POSTGRESQLEXPORT_DB_USER_PASSWORD"
+    echo: yes
+  register: input
+  when: POSTGRESQLEXPORT_DB_USER_PASSWORD is not defined
+- name: Set POSTGRESQLEXPORT_DB_USER_PASSWORD fact from user input
+  set_fact:
+    POSTGRESQLEXPORT_DB_USER_PASSWORD: "{{ input.user_input | default('') | trim }}"
+  when: POSTGRESQLEXPORT_DB_USER_PASSWORD is not defined
+
+# POSTGRESQLEXPORT_DESTINATION_FOLDER
+# Where the PostgreSQL export should be placed on the local filesystem
+- name: POSTGRESQLEXPORT_DESTINATION_FOLDER set fact from env if possible
+  set_fact:
+    POSTGRESQLEXPORT_DESTINATION_FOLDER: "{{ lookup('env', 'POSTGRESQLEXPORT_DESTINATION_FOLDER') | default('') | trim }}"
+  when: lookup('env', 'POSTGRESQLEXPORT_DESTINATION_FOLDER') | default('', true) | trim != ''
+- name: POSTGRESQLEXPORT_DESTINATION_FOLDER prompt user input if unset
+  pause:
+    prompt: "SET POSTGRESQLEXPORT_DESTINATION_FOLDER"
+    echo: yes
+  register: input
+  when: POSTGRESQLEXPORT_DESTINATION_FOLDER is not defined
+- name: Set POSTGRESQLEXPORT_DESTINATION_FOLDER fact from user input
+  set_fact:
+    POSTGRESQLEXPORT_DESTINATION_FOLDER: "{{ input.user_input | default('') | trim }}"
+  when: POSTGRESQLEXPORT_DESTINATION_FOLDER is not defined
+
+
+###############################################################################
+############################ ROLE IMPLEMENTATION ##############################
+###############################################################################
+
+- name: Ensure destination folder exists
+  file:
+    path: "{{ POSTGRESQLEXPORT_DESTINATION_FOLDER }}"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+  become: no
+
+- name: Dump PostgreSQL Database
+  ansible.builtin.shell:
+    cmd: >
+      PGPASSWORD='{{ POSTGRESQLEXPORT_DB_USER_PASSWORD }}' pg_dump
+      -h {{ POSTGRESQLEXPORT_DB_HOST }}
+      -p {{ POSTGRESQLEXPORT_DB_PORT }}
+      -U {{ POSTGRESQLEXPORT_DB_USER }}
+      -d {{ POSTGRESQLEXPORT_DB_NAME }}
+      -f /tmp/postgresql_dump_{{ POSTGRESQLEXPORT_DB_NAME }}.sql
+  register: dump_result
+  ignore_errors: yes
+
+- name: Display error message if dump failed
+  ansible.builtin.debug:
+    msg: "Database dump failed: {{ dump_result.stderr }}"
+  when: dump_result.rc != 0
+
+- name: Fetch the dump file
+  ansible.builtin.fetch:
+    src: "/tmp/postgresql_dump_{{ POSTGRESQLEXPORT_DB_NAME }}.sql"
+    dest: "{{ POSTGRESQLEXPORT_DESTINATION_FOLDER }}/postgresql_dump_{{ POSTGRESQLEXPORT_DB_NAME }}.sql"
+    flat: yes
+  when: dump_result.rc == 0
+
+- name: Remove the temporary dump file from the remote server
+  ansible.builtin.file:
+    path: "/tmp/postgresql_dump_{{ POSTGRESQLEXPORT_DB_NAME }}.sql"
+    state: absent
+  when: dump_result.rc == 0
+
+- name: Confirm successful dump
+  ansible.builtin.debug:
+    msg: "Database dump completed successfully. File saved at {{ POSTGRESQLEXPORT_DESTINATION_FOLDER }}/postgresql_dump_{{ POSTGRESQLEXPORT_DB_NAME }}.sql"
+  when: dump_result.rc == 0
