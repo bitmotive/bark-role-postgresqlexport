@@ -43,21 +43,7 @@ Where to place the exported SQL file on the machine running Ansible.
 Dependencies
 ------------
 
-If you connect to a remote host as a user other than root and 
-attempt to use `become: yes` along with `become_user: postgres` you are
-likely to encounter known issues with Ansible's privilege escalation
-in regard to temp files:
-
-https://docs.ansible.com/ansible-core/2.15/playbook_guide/playbooks_privilege_escalation.html#risks-of-becoming-an-unprivileged-user
-
-One solution for this is to place lines such as the following in your ansible.cfg: 
-```
-remote_tmp = /tmp/ansible-remote
-local_tmp = /tmp/ansible-local
-allow_world_readable_tmpfiles = True
-remote_tmp_dir_mode = 0777
-```
-
+Tested on Linux systems. Assumes ability to pg_dump from target host shell.
 
 License
 -------
